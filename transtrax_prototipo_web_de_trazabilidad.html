@@ -1,0 +1,1922 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TransTrax — Plataforma Web Integral de Gestión y Trazabilidad de Paquetes Internacionales (Cúcuta)</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- QRious para generación real de código QR del enlace del prototipo -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+    <!-- Fuente Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    colors: {
+                        navy: {
+                            900: '#0f2537',
+                            800: '#16344d',
+                            700: '#1e4666',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #f4f6f9;
+            font-family: 'Inter', sans-serif;
+        }
+        /* Animación suave para transiciones de vista */
+        .fade-in {
+            animation: fadeIn 0.25s ease-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        /* Animación de pulso para marcador en el mapa */
+        @keyframes pulseRing {
+            0% { transform: scale(0.85); opacity: 0.9; }
+            70% { transform: scale(1.8); opacity: 0; }
+            100% { transform: scale(1.8); opacity: 0; }
+        }
+        .map-pulse {
+            transform-origin: center;
+            transform-box: fill-box;
+            animation: pulseRing 2s infinite;
+        }
+        /* Línea punteada animada para ruta logística */
+        @keyframes dashFlow {
+            to { stroke-dashoffset: -24; }
+        }
+        .route-dash {
+            animation: dashFlow 1.2s linear infinite;
+        }
+        /* Scrollbar limpio */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col lg:flex-row text-slate-800 antialiased overflow-x-hidden">
+
+    <!-- Overlay móvil para cerrar menú lateral -->
+    <div id="sidebar-overlay" onclick="toggleMobileSidebar(false)" class="fixed inset-0 bg-slate-900/50 z-30 hidden lg:hidden backdrop-blur-xs"></div>
+
+    <!-- BARRA LATERAL AZUL MARINO OSCURO (#0f2537) -->
+    <aside id="sidebar" class="fixed lg:static inset-y-0 left-0 z-40 w-72 bg-[#0f2537] text-white flex flex-col justify-between transform -translate-x-full lg:translate-x-0 transition-transform duration-200 ease-in-out shrink-0 shadow-xl">
+        <div>
+            <!-- Marca / Logo TransTrax -->
+            <div class="p-6 border-b border-white/10 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-sky-500/20 border border-sky-400/30 flex items-center justify-center text-sky-400 shadow-inner">
+                        <!-- Icono SVG Caja / Trazabilidad Global -->
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                        </svg>
+                    </div>
+                    <div>
+                        <span class="text-xl font-bold tracking-tight text-white">Trans<span class="text-sky-400">Trax</span></span>
+                        <p class="text-[11px] text-slate-300 leading-tight">Logística Internacional • Cúcuta</p>
+                    </div>
+                </div>
+                <button onclick="toggleMobileSidebar(false)" class="lg:hidden p-2 rounded-lg text-slate-300 hover:bg-white/10" aria-label="Cerrar menú">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Navegación Principal de Módulos -->
+            <div class="px-4 py-5">
+                <p class="px-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-3">Módulos del Prototipo</p>
+                <nav class="space-y-1.5" id="sidebar-nav">
+                    <button onclick="switchModule('cliente')" data-mod="cliente" class="nav-btn w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-medium transition-all text-left">
+                        <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                        <div>
+                            <div class="leading-snug">1. Portal Público (Cliente)</div>
+                            <div class="text-[11px] opacity-75 font-normal">Consulta y mapa de ruta</div>
+                        </div>
+                    </button>
+
+                    <button onclick="switchModule('dashboard')" data-mod="dashboard" class="nav-btn w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-medium transition-all text-left">
+                        <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                        </svg>
+                        <div>
+                            <div class="leading-snug">2. Dashboard Admin</div>
+                            <div class="text-[11px] opacity-75 font-normal">KPIs y seguimiento global</div>
+                        </div>
+                    </button>
+
+                    <button onclick="switchModule('registro')" data-mod="registro" class="nav-btn w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-medium transition-all text-left">
+                        <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <div>
+                            <div class="leading-snug">3. Registro y Novedades</div>
+                            <div class="text-[11px] opacity-75 font-normal">Altas e incidentes en vivo</div>
+                        </div>
+                    </button>
+
+                    <button onclick="switchModule('reportes')" data-mod="reportes" class="nav-btn w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-medium transition-all text-left">
+                        <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                        <div class="flex-1 flex items-center justify-between">
+                            <div>
+                                <div class="leading-snug">4. Alertas, RBAC y Reportes</div>
+                                <div class="text-[11px] opacity-75 font-normal">Notificaciones y roles</div>
+                            </div>
+                            <span id="sidebar-notif-badge" class="ml-2 px-2 py-0.5 text-[11px] font-bold bg-sky-500 text-white rounded-full">4</span>
+                        </div>
+                    </button>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Información Académica del Proyecto -->
+        <div class="p-4 m-4 rounded-xl bg-white/5 border border-white/10 text-xs text-slate-300 space-y-2">
+            <div class="flex items-center gap-2 text-sky-400 font-semibold">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+                <span>Investigación • UDES Cúcuta</span>
+            </div>
+            <p class="text-[11px] leading-relaxed text-slate-300">
+                <strong>Autores:</strong><br>
+                • Nelson Eduardo Prieto Acuña<br>
+                • Miguel Ángel Galvis Arias
+            </p>
+            <p class="text-[10px] text-slate-400 border-t border-white/10 pt-2">
+                Ingeniería de Sistemas • Seminario de Investigación I
+            </p>
+        </div>
+    </aside>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <div class="flex-1 flex flex-col min-w-0">
+
+        <!-- BARRA SUPERIOR (HEADER) -->
+        <header class="bg-white border-b border-slate-200 sticky top-0 z-20 px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3 shadow-2xs">
+            <div class="flex items-center gap-3">
+                <button onclick="toggleMobileSidebar(true)" class="lg:hidden p-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50" aria-label="Abrir menú">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1 id="header-title" class="text-base sm:text-lg font-bold text-slate-900">Portal Público de Consulta (Vista Cliente)</h1>
+                        <span class="hidden sm:inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-amber-50 text-amber-800 border border-amber-200">
+                            Prueba de concepto
+                        </span>
+                    </div>
+                    <p id="header-subtitle" class="text-xs text-slate-500 hidden sm:block">Trazabilidad de paquetes internacionales en agencias logísticas de Cúcuta</p>
+                </div>
+            </div>
+
+            <!-- Selector rápido de módulos (Desktop / Tablet) y Botón QR Póster -->
+            <div class="flex items-center gap-2 sm:gap-3">
+                <!-- Selector rápido compacto para demostración en vivo -->
+                <div class="hidden xl:flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
+                    <button onclick="switchModule('cliente')" data-pill="cliente" class="top-pill px-3 py-1.5 rounded-lg text-xs font-medium transition-all">Vista Cliente</button>
+                    <button onclick="switchModule('dashboard')" data-pill="dashboard" class="top-pill px-3 py-1.5 rounded-lg text-xs font-medium transition-all">Dashboard Admin</button>
+                    <button onclick="switchModule('registro')" data-pill="registro" class="top-pill px-3 py-1.5 rounded-lg text-xs font-medium transition-all">Registro / Novedades</button>
+                    <button onclick="switchModule('reportes')" data-pill="reportes" class="top-pill px-3 py-1.5 rounded-lg text-xs font-medium transition-all">Alertas y RBAC</button>
+                </div>
+
+                <!-- Botón Notificaciones -->
+                <button onclick="switchModule('reportes')" class="relative p-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors" title="Ver Centro de Notificaciones">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                    </svg>
+                    <span id="header-notif-dot" class="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-rose-500 rounded-full ring-2 ring-white"></span>
+                </button>
+
+                <!-- Botón Enlace y Código QR para Póster -->
+                <button onclick="openQrModal()" class="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-[#0f2537] hover:bg-[#16344d] text-white text-xs font-semibold shadow-xs transition-all cursor-pointer">
+                    <svg class="w-4 h-4 text-sky-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                    </svg>
+                    <span>URL y QR Póster</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- CONTENEDOR DINÁMICO DE VISTAS -->
+        <main id="app-view" class="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
+            <!-- El contenido se renderiza dinámicamente mediante JavaScript -->
+        </main>
+
+        <!-- PIE DE PÁGINA ACADÉMICO DISCRETO -->
+        <footer class="bg-white border-t border-slate-200 px-4 sm:px-6 py-3.5 text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-2">
+            <div class="flex items-center gap-2 text-center sm:text-left">
+                <span class="w-2 h-2 rounded-full bg-sky-500 shrink-0"></span>
+                <span class="font-medium text-slate-700">Prototipo de interfaz de alta fidelidad (Prueba de concepto) — Proyecto de Investigación UDES Cúcuta</span>
+            </div>
+            <div class="text-[11px] text-slate-400 text-center sm:text-right">
+                Tratamiento de datos conforme a Ley 1581 de 2012 • Nelson Prieto &amp; Miguel Galvis
+            </div>
+        </footer>
+    </div>
+
+    <!-- MODAL DE DETALLE DE PAQUETE (PARA DASHBOARD ADMIN) -->
+    <div id="detail-modal" class="fixed inset-0 bg-slate-900/60 z-50 hidden items-center justify-center p-4 backdrop-blur-xs">
+        <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden fade-in">
+            <div class="px-6 py-4 bg-[#0f2537] text-white flex items-center justify-between">
+                <div>
+                    <span class="text-xs text-sky-300 uppercase tracking-wider font-semibold">Ficha Operativa del Envío</span>
+                    <h3 id="modal-pkg-code" class="text-lg font-bold">TTX-84729-CO</h3>
+                </div>
+                <button onclick="closeDetailModal()" class="p-2 rounded-lg text-slate-300 hover:bg-white/10">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div id="modal-pkg-body" class="p-6 overflow-y-auto space-y-5 text-sm">
+                <!-- Contenido inyectado dinámicamente -->
+            </div>
+            <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3">
+                <button id="modal-btn-client" class="px-4 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 font-medium text-xs transition-colors">
+                    Ver en Portal Cliente
+                </button>
+                <div class="flex items-center gap-2">
+                    <button id="modal-btn-update" class="px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-semibold text-xs transition-colors">
+                        Registrar Novedad / Actualizar Estado
+                    </button>
+                    <button onclick="closeDetailModal()" class="px-4 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 font-medium text-xs transition-colors">
+                        Cerrar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE ENLACE OFICIAL Y CÓDIGO QR PARA PÓSTER -->
+    <div id="qr-modal" class="fixed inset-0 bg-slate-900/60 z-50 hidden items-center justify-center p-4 backdrop-blur-xs">
+        <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden fade-in">
+            <div class="px-6 py-4 bg-[#0f2537] text-white flex items-center justify-between">
+                <div>
+                    <h3 class="text-base font-bold">Enlace Oficial y Código QR — Póster</h3>
+                    <p class="text-xs text-slate-300">VIII Encuentro Interseminario de Investigación</p>
+                </div>
+                <button onclick="closeQrModal()" class="p-2 rounded-lg text-slate-300 hover:bg-white/10">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="p-6 space-y-4 text-center">
+                <p class="text-xs text-slate-600 leading-relaxed">
+                    Utiliza esta URL y código QR en la sección <strong>"URL DEL PROYECTO"</strong> de tu póster académico para que los evaluadores accedan directamente a los mockups interactivos.
+                </p>
+
+                <!-- Contenedor del Canvas QR -->
+                <div class="inline-flex flex-col items-center justify-center p-4 bg-white rounded-2xl border-2 border-slate-200 shadow-xs">
+                    <canvas id="qr-canvas" class="w-44 h-44"></canvas>
+                    <span class="mt-2 text-[11px] font-semibold text-[#0f2537] tracking-wide">TransTrax • UDES Cúcuta</span>
+                </div>
+
+                <!-- Campo URL editable + Copiar -->
+                <div class="text-left space-y-1.5">
+                    <label for="poster-url-input" class="block text-xs font-semibold text-slate-700">Enlace del prototipo (editable si lo hospedas en Vercel/GitHub Pages):</label>
+                    <div class="flex gap-2">
+                        <input id="poster-url-input" type="text" oninput="updateQrCode(this.value)" class="flex-1 px-3 py-2 text-xs rounded-xl border border-slate-300 bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500" />
+                        <button onclick="copyPosterUrl()" class="px-3.5 py-2 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-xs font-semibold shrink-0 transition-colors">
+                            Copiar
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="px-6 py-3 bg-slate-50 border-t border-slate-200 flex justify-end">
+                <button onclick="closeQrModal()" class="px-4 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-semibold">
+                    Listo
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONTENEDOR DE NOTIFICACIONES TOAST -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2.5 max-w-sm w-full pointer-events-none px-4 sm:px-0"></div>
+
+    <!-- LÓGICA COMPLETA DEL PROTOTIPO INTERACTIVO -->
+    <script>
+        /**
+         * ESTADO GLOBAL REACTIVO DE LA PLATAFORMA TRANSTRAX
+         * Simula la base de datos relacional centralizada (Paquetes, Historial, Notificaciones, Usuarios RBAC)
+         */
+        const STAGES = [
+            'Registrado',
+            'Recibido',
+            'En Tránsito',
+            'En Aduana',
+            'En Reparto',
+            'Entregado'
+        ];
+
+        const appState = {
+            currentModule: 'cliente',
+            selectedClientCode: 'TTX-84729-CO',
+            selectedPackageForIncident: 'TTX-84729-CO',
+            dashboardSearch: '',
+            dashboardStatusFilter: 'Todos',
+            notifFilter: 'Todas',
+            packages: [
+                {
+                    code: 'TTX-84729-CO',
+                    recipientFull: 'Nelson Eduardo Prieto Acuña',
+                    recipientMasked: 'N***** E****** P***** A****',
+                    phoneFull: '+57 314 582 9014',
+                    phoneMasked: '+57 314 *** **14',
+                    emailFull: 'nelson.prieto@mail.udes.edu.co',
+                    emailMasked: 'nel***@mail.udes.edu.co',
+                    destinationCity: 'Cúcuta, Norte de Santander',
+                    addressFull: 'Av. Gran Colombia #12E-96, Barrio Colsag, Cúcuta',
+                    origin: 'Miami, EE. UU.',
+                    weight: '2.4 kg',
+                    content: 'Componentes electrónicos y sensores IoT',
+                    status: 'En Reparto',
+                    hasIncident: false,
+                    subscribedEmail: true,
+                    lastUpdate: '12/11/2026, 09:15 a. m.',
+                    routeCoords: { originLabel: 'Hub Miami (MIA)', progressPercent: 84 },
+                    history: [
+                        {
+                            stage: 'Registrado',
+                            date: '07/11/2026, 10:20 a. m.',
+                            location: 'Casillero Internacional — Miami, FL',
+                            detail: 'Orden de envío internacional registrada y código único asignado.',
+                            operator: 'Sistema / Operario J. Martínez',
+                            visibleClient: true,
+                            isIncident: false
+                        },
+                        {
+                            stage: 'Recibido',
+                            date: '08/11/2026, 02:45 p. m.',
+                            location: 'Centro de Consolidación — Miami, FL',
+                            detail: 'Paquete verificado, pesado (2.4 kg) y embalado para despacho aéreo.',
+                            operator: 'Operario J. Martínez',
+                            visibleClient: true,
+                            isIncident: false
+                        },
+                        {
+                            stage: 'En Tránsito',
+                            date: '09/11/2026, 08:10 p. m.',
+                            location: 'Vuelo Carga Internacional → Bogotá / Cúcuta',
+                            detail: 'Manifiesto de carga aéreo en ruta hacia territorio colombiano.',
+                            operator: 'Operario A. Gómez',
+                            visibleClient: true,
+                            isIncident: false
+                        },
+                        {
+                            stage: 'En Aduana',
+                            date: '11/11/2026, 11:30 a. m.',
+                            location: 'Zona de Inspección Aduanera — Cúcuta',
+                            detail: 'Nacionalización y levante aduanero completados sin novedades.',
+                            operator: 'Operario N. Prieto',
+                            visibleClient: true,
+                            isIncident: false
+                        },
+                        {
+                            stage: 'En Reparto',
+                            date: '12/11/2026, 09:15 a. m.',
+                            location: 'Agencia Logística Central — Cúcuta, N. de S.',
+                            detail: 'Paquete asignado a vehículo de distribución local en Cúcuta.',
+                            operator: 'Operario N. Prieto',
+                            visibleClient: true,
+                            isIncident: false
+                        }
+                    ]
+                },
+                {
+                    code: 'TTX-91045-CO',
+                    recipientFull: 'Miguel Ángel Galvis Arias',
+                    recipientMasked: 'M***** Á**** G***** A****',
+                    phoneFull: '+57 320 419 7732',
+                    phoneMasked: '+57 320 *** **32',
+                    emailFull: 'miguel.galvis@mail.udes.edu.co',
+                    emailMasked: 'mig***@mail.udes.edu.co',
+                    destinationCity: 'Cúcuta, Norte de Santander',
+                    addressFull: 'Calle 15 #3-45, Barrio La Playa, Cúcuta',
+                    origin: 'Madrid, España',
+                    weight: '4.1 kg',
+                    content: 'Libros técnicos y material académico',
+                    status: 'En Aduana',
+                    hasIncident: true,
+                    subscribedEmail: true,
+                    lastUpdate: '12/11/2026, 08:40 a. m.',
+                    routeCoords: { originLabel: 'Hub Madrid (MAD)', progressPercent: 65 },
+                    history: [
+                        {
+                            stage: 'Registrado',
+                            date: '06/11/2026, 09:00 a. m.',
+                            location: 'Agencia Origen — Madrid, España',
+                            detail: 'Envío internacional registrado en plataforma.',
+                            operator: 'Operario L. Fernández',
+                            visibleClient: true,
+                            isIncident: false
+                        },
+                        {
+                            stage: 'Recibido',
+                            date: '07/11/2026, 04:15 p. m.',
+                            location: 'Terminal Carga Barajas — Madrid',
+                            detail: 'Recepción física y validación de guía internacional.',
+                            operator: 'Operario L. Fernández',
+                            visibleClient: true,
+                            isIncident: false
+                        },
+                        {
+                            stage: 'En Tránsito',
+                            date: '09/11/2026, 06:50 a. m.',
+                            location: 'Tránsito Internacional hacia Colombia',
+                            detail: 'Envío arribado a hub nacional y remitido a Cúcuta.',
+                            operator: 'Operario A. Gómez',
+                            visibleClient: true,
+                            isIncident: false
+                        },
+                        {
+                            stage: 'En Aduana',
+                            date: '12/11/2026, 08:40 a. m.',
+                            location: 'Control Aduanero — Cúcuta, N. de S.',
+                            detail: 'Retraso en Aduana: Inspección documental de rutina por validación de factura comercial. Tiempo estimado: 24 horas.',
+                            operator: 'Operario M. Galvis',
+                            visibleClient: true,
+                            isIncident: true
+                        }
+                    ]
+                },
+                {
+                    code: 'TTX-33210-CO',
+                    recipientFull: 'Laura Camila Mendoza Rojas',
+                    recipientMasked: 'L**** C***** M****** R****',
+                    phoneFull: '+57 311 890 4421',
+                    phoneMasked: '+57 311 *** **21',
+                    emailFull: 'laura.mendoza@correo.com',
+                    emailMasked: 'lau***@correo.com',
+                    destinationCity: 'Cúcuta, Norte de Santander',
+                    addressFull: 'Av. Libertadores #18-20, Barrio Caobos, Cúcuta',
+                    origin: 'Shenzhen, China',
+                    weight: '1.2 kg',
+                    content: 'Accesorios de cómputo y periféricos',
+                    status: 'Entregado',
+                    hasIncident: false,
+                    subscribedEmail: true,
+                    lastUpdate: '10/11/2026, 03:50 p. m.',
+                    routeCoords: { originLabel: 'Hub Shenzhen (SZX)', progressPercent: 100 },
+                    history: [
+                        {
+                            stage: 'Registrado',
+                            date: '01/11/2026, 11:00 a. m.',
+                            location: 'Centro Logístico — Shenzhen, China',
+                            detail: 'Paquete registrado y etiquetado con código TransTrax.',
+                            operator: 'Operario K. Chen',
+                            visibleClient: true,
+                            isIncident: false
+                        },
+                        {
+                            stage: 'En Tránsito',
+                            date: '04/11/2026, 01:20 p. m.',
+                            location: 'Ruta Transpacífica → América Latina',
+                            detail: 'En tránsito internacional hacia destino final.',
+                            operator: 'Sistema Logístico',
+                            visibleClient: true,
+                            isIncident: false
+                        },
+                        {
+                            stage: 'En Aduana',
+                            date: '08/11/2026, 10:15 a. m.',
+                            location: 'Aduana Nacional — Cúcuta',
+                            detail: 'Revisión aduanera aprobada sin cargos adicionales.',
+                            operator: 'Operario N. Prieto',
+                            visibleClient: true,
+                            isIncident: false
+                        },
+                        {
+                            stage: 'En Reparto',
+                            date: '10/11/2026, 09:05 a. m.',
+                            location: 'Agencia Local — Cúcuta, N. de S.',
+                            detail: 'En ruta de última milla en zona urbana de Cúcuta.',
+                            operator: 'Operario N. Prieto',
+                            visibleClient: true,
+                            isIncident: false
+                        },
+                        {
+                            stage: 'Entregado',
+                            date: '10/11/2026, 03:50 p. m.',
+                            location: 'Barrio Caobos — Cúcuta, N. de S.',
+                            detail: 'Paquete entregado satisfactoriamente al destinatario autorizado.',
+                            operator: 'Mensajero D. Silva',
+                            visibleClient: true,
+                            isIncident: false
+                        }
+                    ]
+                },
+                {
+                    code: 'TTX-76412-CO',
+                    recipientFull: 'Carlos Andrés Ramírez',
+                    recipientMasked: 'C***** A***** R******',
+                    phoneFull: '+57 315 234 6610',
+                    phoneMasked: '+57 315 *** **10',
+                    emailFull: 'carlos.ramirez@correo.com',
+                    emailMasked: 'car***@correo.com',
+                    destinationCity: 'Villa del Rosario, Área Metropolitana Cúcuta',
+                    addressFull: 'Carrera 7 #10-14, Villa del Rosario',
+                    origin: 'Ciudad de Panamá, Panamá',
+                    weight: '3.5 kg',
+                    content: 'Repuestos industriales ligeros',
+                    status: 'En Tránsito',
+                    hasIncident: false,
+                    subscribedEmail: false,
+                    lastUpdate: '11/11/2026, 06:30 p. m.',
+                    routeCoords: { originLabel: 'Hub Panamá (PTY)', progressPercent: 46 },
+                    history: [
+                        {
+                            stage: 'Registrado',
+                            date: '10/11/2026, 02:10 p. m.',
+                            location: 'Zona Libre — Colón / Panamá',
+                            detail: 'Registro inicial de encomienda internacional.',
+                            operator: 'Operario A. Gómez',
+                            visibleClient: true,
+                            isIncident: false
+                        },
+                        {
+                            stage: 'En Tránsito',
+                            date: '11/11/2026, 06:30 p. m.',
+                            location: 'En conexión aérea hacia Cúcuta',
+                            detail: 'Paquete despachado desde hub regional hacia Cúcuta.',
+                            operator: 'Operario A. Gómez',
+                            visibleClient: true,
+                            isIncident: false
+                        }
+                    ]
+                }
+            ],
+            notifications: [
+                {
+                    id: 'NOT-01',
+                    code: 'TTX-84729-CO',
+                    type: 'Cambio de Estado',
+                    channel: 'Correo Electrónico',
+                    recipient: 'nel***@mail.udes.edu.co',
+                    title: 'Paquete en proceso de entrega en Cúcuta',
+                    message: 'Su envío TTX-84729-CO ha salido de nuestra agencia en Cúcuta y se encuentra en ruta de entrega local.',
+                    timestamp: '12/11/2026, 09:15 a. m.',
+                    status: 'Enviada'
+                },
+                {
+                    id: 'NOT-02',
+                    code: 'TTX-91045-CO',
+                    type: 'Novedad / Incidente',
+                    channel: 'Correo y SMS',
+                    recipient: 'mig***@mail.udes.edu.co',
+                    title: 'Novedad registrada: Inspección de rutina en aduana',
+                    message: 'Informamos que el paquete TTX-91045-CO presenta una verificación documental de rutina en aduana. Le notificaremos su liberación.',
+                    timestamp: '12/11/2026, 08:40 a. m.',
+                    status: 'Enviada'
+                },
+                {
+                    id: 'NOT-03',
+                    code: 'TTX-33210-CO',
+                    type: 'Entrega Exitosa',
+                    channel: 'Correo Electrónico',
+                    recipient: 'lau***@correo.com',
+                    title: '¡Su paquete internacional ha sido entregado!',
+                    message: 'Confirmamos la entrega exitosa del paquete TTX-33210-CO en Cúcuta. Gracias por confiar en nuestra agencia.',
+                    timestamp: '10/11/2026, 03:50 p. m.',
+                    status: 'Enviada'
+                },
+                {
+                    id: 'NOT-04',
+                    code: 'TTX-76412-CO',
+                    type: 'Cambio de Estado',
+                    channel: 'Correo Electrónico',
+                    recipient: 'car***@correo.com',
+                    title: 'Envío internacional en tránsito',
+                    message: 'El paquete TTX-76412-CO procedente de Panamá ya se encuentra en tránsito hacia Cúcuta.',
+                    timestamp: '11/11/2026, 06:30 p. m.',
+                    status: 'Enviada'
+                }
+            ],
+            users: [
+                {
+                    id: 'USR-01',
+                    name: 'Nelson Eduardo Prieto Acuña',
+                    email: 'nelson.prieto@transtrax.co',
+                    role: 'Administrador',
+                    permissions: 'Control total, RBAC, reportes y auditoría',
+                    active: true
+                },
+                {
+                    id: 'USR-02',
+                    name: 'Miguel Ángel Galvis Arias',
+                    email: 'miguel.galvis@transtrax.co',
+                    role: 'Administrador',
+                    permissions: 'Control total, RBAC, reportes y auditoría',
+                    active: true
+                },
+                {
+                    id: 'USR-03',
+                    name: 'Andrés Felipe Gómez',
+                    email: 'agomez@transtrax.co',
+                    role: 'Operario Logístico',
+                    permissions: 'Registro de paquetes, actualización de estados y novedades',
+                    active: true
+                },
+                {
+                    id: 'USR-04',
+                    name: 'Juliana Martínez',
+                    email: 'jmartinez@transtrax.co',
+                    role: 'Operario Logístico',
+                    permissions: 'Registro de paquetes y consulta de trazabilidad',
+                    active: false
+                }
+            ]
+        };
+
+        /**
+         * UTILIDADES DE FORMATO Y PRIVACIDAD (LEY 1581 DE 2012)
+         */
+        function maskName(fullName) {
+            return fullName.split(' ').map(part => {
+                if (part.length <= 1) return part;
+                return part[0] + '*'.repeat(Math.min(part.length - 1, 6));
+            }).join(' ');
+        }
+
+        function maskEmail(email) {
+            const [user, domain] = email.split('@');
+            if (!domain) return '***@***';
+            return user.slice(0, 3) + '***@' + domain;
+        }
+
+        function maskPhone(phone) {
+            const digits = phone.replace(/\s+/g, '');
+            if (digits.length < 6) return '***';
+            return digits.slice(0, 6) + ' *** **' + digits.slice(-2);
+        }
+
+        function getCurrentFormattedDate() {
+            const now = new Date();
+            return now.toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: 'numeric' }) +
+                ', ' + now.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function generateRandomCode() {
+            const num = Math.floor(10000 + Math.random() * 90000);
+            return `TTX-${num}-CO`;
+        }
+
+        function getStatusBadge(status, hasIncident = false) {
+            const styles = {
+                'Registrado': 'bg-slate-100 text-slate-700 border-slate-300',
+                'Recibido': 'bg-indigo-50 text-indigo-700 border-indigo-200',
+                'En Tránsito': 'bg-sky-50 text-sky-700 border-sky-200',
+                'En Aduana': 'bg-amber-50 text-amber-800 border-amber-300',
+                'En Reparto': 'bg-blue-50 text-blue-700 border-blue-200',
+                'Entregado': 'bg-emerald-50 text-emerald-700 border-emerald-200'
+            };
+            const baseClass = styles[status] || 'bg-slate-100 text-slate-700 border-slate-200';
+            let html = `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${baseClass}">
+                <span class="w-1.5 h-1.5 rounded-full bg-current"></span>${status}
+            </span>`;
+            if (hasIncident && status !== 'Entregado') {
+                html += `<span class="ml-1.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-rose-50 text-rose-700 border border-rose-200" title="Novedad activa">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    Novedad
+                </span>`;
+            }
+            return html;
+        }
+
+        function showToast(title, message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const colors = {
+                success: 'border-emerald-200 bg-white text-slate-800',
+                warning: 'border-amber-200 bg-white text-slate-800',
+                info: 'border-sky-200 bg-white text-slate-800'
+            };
+            const iconColors = {
+                success: 'bg-emerald-100 text-emerald-600',
+                warning: 'bg-amber-100 text-amber-600',
+                info: 'bg-sky-100 text-sky-600'
+            };
+            toast.className = `pointer-events-auto p-4 rounded-2xl border shadow-lg flex items-start gap-3 fade-in ${colors[type] || colors.info}`;
+            toast.innerHTML = `
+                <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${iconColors[type] || iconColors.info}">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-xs font-bold text-slate-900">${title}</p>
+                    <p class="text-xs text-slate-600 mt-0.5 leading-snug">${message}</p>
+                </div>
+            `;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transition = 'opacity 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 4200);
+        }
+
+        /**
+         * NAVEGACIÓN ENTRE MÓDULOS
+         */
+        function toggleMobileSidebar(open) {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            if (open) {
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('hidden');
+            }
+        }
+
+        function switchModule(moduleKey) {
+            appState.currentModule = moduleKey;
+            toggleMobileSidebar(false);
+
+            const meta = {
+                cliente: {
+                    title: '1. Portal Público de Consulta (Vista Cliente)',
+                    subtitle: 'Consulta segura por código de seguimiento, mapa de ruta e historial público (Ley 1581 de 2012)'
+                },
+                dashboard: {
+                    title: '2. Panel Administrativo — Dashboard y Seguimiento',
+                    subtitle: 'Indicadores operativos en tiempo real y gestión centralizada de envíos internacionales'
+                },
+                registro: {
+                    title: '3. Panel Administrativo — Registro de Envíos y Novedades',
+                    subtitle: 'Alta de paquetes internacionales, actualización manual de estados y reporte de incidentes'
+                },
+                reportes: {
+                    title: '4. Centro de Notificaciones, Roles (RBAC) y Reportes',
+                    subtitle: 'Alertas automáticas al cliente, control de acceso por roles y estadísticas de gestión en Cúcuta'
+                }
+            };
+
+            document.getElementById('header-title').textContent = meta[moduleKey].title;
+            document.getElementById('header-subtitle').textContent = meta[moduleKey].subtitle;
+
+            // Actualizar estilos de navegación lateral
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                if (btn.dataset.mod === moduleKey) {
+                    btn.className = 'nav-btn w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-semibold transition-all text-left bg-sky-500 text-white shadow-md shadow-sky-950/30';
+                } else {
+                    btn.className = 'nav-btn w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-medium transition-all text-left text-slate-300 hover:bg-white/10 hover:text-white';
+                }
+            });
+
+            // Actualizar estilos de selector superior rápido
+            document.querySelectorAll('.top-pill').forEach(pill => {
+                if (pill.dataset.pill === moduleKey) {
+                    pill.className = 'top-pill px-3 py-1.5 rounded-lg text-xs font-semibold transition-all bg-white text-[#0f2537] shadow-2xs';
+                } else {
+                    pill.className = 'top-pill px-3 py-1.5 rounded-lg text-xs font-medium transition-all text-slate-600 hover:text-slate-900';
+                }
+            });
+
+            updateNotificationCounters();
+            renderCurrentModule();
+        }
+
+        function updateNotificationCounters() {
+            const count = appState.notifications.length;
+            const badge = document.getElementById('sidebar-notif-badge');
+            if (badge) badge.textContent = count;
+        }
+
+        function renderCurrentModule() {
+            const container = document.getElementById('app-view');
+            container.innerHTML = '';
+            const wrapper = document.createElement('div');
+            wrapper.className = 'fade-in space-y-6';
+
+            if (appState.currentModule === 'cliente') {
+                wrapper.innerHTML = renderClientPortalModule();
+            } else if (appState.currentModule === 'dashboard') {
+                wrapper.innerHTML = renderAdminDashboardModule();
+            } else if (appState.currentModule === 'registro') {
+                wrapper.innerHTML = renderRegistrationAndIncidentsModule();
+            } else if (appState.currentModule === 'reportes') {
+                wrapper.innerHTML = renderNotificationsRbacReportsModule();
+            }
+
+            container.appendChild(wrapper);
+        }
+
+        /**
+         * MÓDULO 1: PORTAL PÚBLICO DE CONSULTA (VISTA CLIENTE)
+         */
+        function searchClientPackage(codeOverride) {
+            const input = document.getElementById('client-search-input');
+            const query = (codeOverride || (input ? input.value : appState.selectedClientCode)).trim().toUpperCase();
+            if (!query) {
+                showToast('Código requerido', 'Por favor ingresa un código de seguimiento válido (ej. TTX-84729-CO).', 'warning');
+                return;
+            }
+            const found = appState.packages.find(p => p.code.toUpperCase() === query);
+            if (!found) {
+                showToast('Paquete no encontrado', `No existe ningún envío registrado con el código "${query}". Verifica e intenta nuevamente.`, 'warning');
+                return;
+            }
+            appState.selectedClientCode = found.code;
+            renderCurrentModule();
+        }
+
+        function toggleClientSubscription(code) {
+            const pkg = appState.packages.find(p => p.code === code);
+            if (!pkg) return;
+            pkg.subscribedEmail = !pkg.subscribedEmail;
+            showToast(
+                pkg.subscribedEmail ? 'Suscripción activada' : 'Suscripción pausada',
+                pkg.subscribedEmail
+                    ? `Recibirás notificaciones automáticas en ${pkg.emailMasked} ante cambios de estado.`
+                    : 'Se han desactivado las notificaciones por correo para este envío.',
+                pkg.subscribedEmail ? 'success' : 'info'
+            );
+            renderCurrentModule();
+        }
+
+        function renderClientPortalModule() {
+            const pkg = appState.packages.find(p => p.code === appState.selectedClientCode) || appState.packages[0];
+            const currentStageIdx = STAGES.indexOf(pkg.status);
+            const publicHistory = pkg.history.filter(h => h.visibleClient).slice().reverse();
+
+            // Coordenadas SVG dinámicas según etapa actual del paquete
+            const stagePositions = [
+                { x: 110, y: 155, label: pkg.routeCoords.originLabel }, // 0: Registrado
+                { x: 185, y: 120, label: 'Consolidación Origen' },      // 1: Recibido
+                { x: 315, y: 95,  label: 'Corredor Internacional' },    // 2: En Tránsito
+                { x: 435, y: 135, label: 'Aduana Cúcuta' },             // 3: En Aduana
+                { x: 515, y: 165, label: 'Ruta Urbana Cúcuta' },        // 4: En Reparto
+                { x: 565, y: 145, label: 'Destino Cúcuta' }             // 5: Entregado
+            ];
+            const pin = stagePositions[Math.max(0, currentStageIdx)];
+
+            return `
+                <!-- Banner de Consulta Pública -->
+                <div class="bg-gradient-to-r from-[#0f2537] to-[#1e4666] rounded-2xl p-6 sm:p-8 text-white shadow-md">
+                    <div class="max-w-3xl">
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-sky-500/20 text-sky-300 border border-sky-400/30 mb-3">
+                            Portal de Consulta Ciudadana • Acceso Sin Contraseña
+                        </span>
+                        <h2 class="text-xl sm:text-2xl font-bold tracking-tight">Rastrea tu paquete internacional en tiempo real</h2>
+                        <p class="text-xs sm:text-sm text-slate-300 mt-1">
+                            Ingresa tu código único de seguimiento asignado por la agencia logística en Cúcuta para conocer el estado y trazabilidad de tu envío.
+                        </p>
+
+                        <!-- Barra de búsqueda -->
+                        <form onsubmit="event.preventDefault(); searchClientPackage();" class="mt-5 flex flex-col sm:flex-row gap-2.5">
+                            <div class="relative flex-1">
+                                <input id="client-search-input" type="text" value="${pkg.code}" placeholder="Ej. TTX-84729-CO"
+                                    class="w-full pl-11 pr-4 py-3 rounded-xl bg-white text-slate-900 font-semibold text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-400 shadow-xs uppercase" />
+                                <svg class="w-5 h-5 text-slate-400 absolute left-3.5 top-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                            </div>
+                            <button type="submit" class="px-6 py-3 rounded-xl bg-sky-500 hover:bg-sky-400 text-white font-semibold text-sm transition-colors shadow-sm cursor-pointer">
+                                Consultar Envío
+                            </button>
+                        </form>
+
+                        <!-- Códigos de ejemplo clicables -->
+                        <div class="mt-4 flex flex-wrap items-center gap-2 text-xs">
+                            <span class="text-slate-300 font-medium">Ejemplos clicables:</span>
+                            ${appState.packages.slice(0, 4).map(item => `
+                                <button type="button" onclick="searchClientPackage('${item.code}')"
+                                    class="px-2.5 py-1 rounded-lg border transition-all cursor-pointer ${item.code === pkg.code
+                                        ? 'bg-white text-[#0f2537] border-white font-bold shadow-xs'
+                                        : 'bg-white/10 text-sky-200 border-white/15 hover:bg-white/20'}">
+                                    ${item.code} <span class="opacity-75">(${item.status})</span>
+                                </button>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Barra de Progreso Visual por Etapas -->
+                <div class="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200 shadow-2xs">
+                    <div class="flex flex-wrap items-center justify-between gap-3 pb-5 border-b border-slate-100">
+                        <div>
+                            <div class="flex flex-wrap items-center gap-2.5">
+                                <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Código:</span>
+                                <span class="text-lg font-bold text-slate-900">${pkg.code}</span>
+                                ${getStatusBadge(pkg.status, pkg.hasIncident)}
+                            </div>
+                            <p class="text-xs text-slate-500 mt-1">
+                                Origen: <strong class="text-slate-700">${pkg.origin}</strong> &rarr; Destino: <strong class="text-slate-700">${pkg.destinationCity}</strong>
+                            </p>
+                        </div>
+                        <div class="text-left sm:text-right">
+                            <span class="text-[11px] text-slate-400 block">Última actualización registrada</span>
+                            <span class="text-xs font-semibold text-slate-700">${pkg.lastUpdate}</span>
+                        </div>
+                    </div>
+
+                    <!-- Stepper horizontal adaptable -->
+                    <div class="mt-6 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                        ${STAGES.map((stage, idx) => {
+                            const isCompleted = idx < currentStageIdx;
+                            const isCurrent = idx === currentStageIdx;
+                            const isAlert = isCurrent && pkg.hasIncident && pkg.status !== 'Entregado';
+
+                            let cardStyle = 'border-slate-200 bg-slate-50/70 text-slate-400';
+                            let iconHtml = `<span class="text-xs font-bold">${idx + 1}</span>`;
+
+                            if (isCompleted) {
+                                cardStyle = 'border-emerald-200 bg-emerald-50/60 text-emerald-800';
+                                iconHtml = `<svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>`;
+                            } else if (isAlert) {
+                                cardStyle = 'border-amber-400 bg-amber-50 text-amber-900 ring-2 ring-amber-200';
+                                iconHtml = `<svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M12 3l9 16H3L12 3z"/></svg>`;
+                            } else if (isCurrent) {
+                                cardStyle = 'border-sky-500 bg-sky-50 text-sky-900 ring-2 ring-sky-200';
+                                iconHtml = `<span class="w-2.5 h-2.5 rounded-full bg-sky-600 animate-ping"></span>`;
+                            }
+
+                            return `
+                                <div class="p-3 rounded-xl border ${cardStyle} flex flex-col items-center text-center transition-all">
+                                    <div class="w-7 h-7 rounded-full bg-white border border-current/20 flex items-center justify-center mb-2 shadow-2xs">
+                                        ${iconHtml}
+                                    </div>
+                                    <span class="text-xs font-bold leading-tight">${stage}</span>
+                                    <span class="text-[10px] mt-0.5 opacity-80">
+                                        ${isCompleted ? 'Completado' : (isCurrent ? 'Etapa actual' : 'Pendiente')}
+                                    </span>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+
+                <!-- Grid Principal: Mapa de Ruta + Privacidad/Notificaciones + Línea de Tiempo -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+                    <!-- Columna Izquierda (7 cols): Mapa Simulado + Tarjeta de Privacidad Ley 1581 -->
+                    <div class="lg:col-span-7 space-y-6">
+                        <!-- Mapa Geográfico Estilizado SVG -->
+                        <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-2xs">
+                            <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <svg class="w-5 h-5 text-sky-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                                    </svg>
+                                    <h3 class="text-sm font-bold text-slate-900">Visualización de Ruta Logística (Simulada)</h3>
+                                </div>
+                                <span class="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600">
+                                    Corredor Internacional &rarr; Cúcuta
+                                </span>
+                            </div>
+
+                            <!-- Canvas SVG Cartográfico -->
+                            <div class="relative bg-[#e8f0f7] w-full overflow-hidden">
+                                <svg viewBox="0 0 660 250" class="w-full h-auto block">
+                                    <defs>
+                                        <pattern id="gridPattern" width="30" height="30" patternUnits="userSpaceOnUse">
+                                            <path d="M 30 0 L 0 0 0 30" fill="none" stroke="#cbd5e1" stroke-width="0.6" opacity="0.5"/>
+                                        </pattern>
+                                    </defs>
+                                    <rect width="660" height="250" fill="#e6eff7" />
+                                    <rect width="660" height="250" fill="url(#gridPattern)" />
+
+                                    <!-- Siluetas geográficas estilizadas (Norteamérica / Caribe / Colombia - Norte de Santander) -->
+                                    <path d="M 20,40 Q 130,30 195,95 Q 210,130 155,175 Q 90,190 35,140 Z" fill="#d5e3ee" stroke="#b8cde0" stroke-width="1.5" />
+                                    <path d="M 370,65 Q 485,45 595,85 Q 635,145 590,215 Q 470,235 395,185 Q 360,125 370,65 Z" fill="#d2e4d8" stroke="#aec9b7" stroke-width="1.5" />
+
+                                    <!-- Etiquetas de zonas geográficas -->
+                                    <text x="55" y="65" font-size="10" font-weight="600" fill="#64748b">HUB ORIGEN INTERNACIONAL</text>
+                                    <text x="435" y="75" font-size="10" font-weight="700" fill="#3b6e52">COLOMBIA • NORTE DE SANTANDER</text>
+                                    <text x="485" y="200" font-size="9" font-weight="600" fill="#475569">Área Metropolitana de Cúcuta</text>
+
+                                    <!-- Ruta completa de referencia -->
+                                    <path d="M 110,155 Q 240,55 435,135 T 565,145" fill="none" stroke="#94a3b8" stroke-width="3" stroke-dasharray="4 4" />
+
+                                    <!-- Ruta activa animada -->
+                                    <path d="M 110,155 Q 240,55 435,135 T 565,145" fill="none" stroke="#0284c7" stroke-width="3.5" stroke-dasharray="8 4" class="route-dash" />
+
+                                    <!-- Nodo Origen -->
+                                    <circle cx="110" cy="155" r="6" fill="#0f2537" stroke="#ffffff" stroke-width="2" />
+                                    <rect x="45" y="168" width="130" height="22" rx="6" fill="#0f2537" />
+                                    <text x="110" y="182" text-anchor="middle" font-size="9.5" font-weight="600" fill="#ffffff">${pkg.origin}</text>
+
+                                    <!-- Nodo Aduana Cúcuta -->
+                                    <circle cx="435" cy="135" r="5" fill="#475569" stroke="#ffffff" stroke-width="1.5" />
+                                    <text x="435" y="122" text-anchor="middle" font-size="9" font-weight="600" fill="#334155">Aduana Cúcuta</text>
+
+                                    <!-- Nodo Destino Final Cúcuta -->
+                                    <circle cx="565" cy="145" r="6" fill="#10b981" stroke="#ffffff" stroke-width="2" />
+                                    <rect x="505" y="162" width="120" height="22" rx="6" fill="#065f46" />
+                                    <text x="565" y="176" text-anchor="middle" font-size="9.5" font-weight="600" fill="#ffffff">Agencia Cúcuta</text>
+
+                                    <!-- MARCADOR ANIMADO DE POSICIÓN ACTUAL DEL PAQUETE -->
+                                    <g transform="translate(${pin.x}, ${pin.y})">
+                                        <circle cx="0" cy="0" r="14" fill="${pkg.hasIncident && pkg.status !== 'Entregado' ? '#f59e0b' : '#0284c7'}" class="map-pulse" />
+                                        <circle cx="0" cy="0" r="8" fill="${pkg.hasIncident && pkg.status !== 'Entregado' ? '#d97706' : '#0369a1'}" stroke="#ffffff" stroke-width="2.5" />
+                                        <rect x="-62" y="-34" width="124" height="22" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" />
+                                        <text x="0" y="-20" text-anchor="middle" font-size="9.5" font-weight="700" fill="#0f2537">${pin.label}</text>
+                                    </g>
+                                </svg>
+                            </div>
+                            <div class="px-5 py-3 bg-slate-50 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500">
+                                <span>* Actualización basada en hitos registrados por el personal autorizado de la agencia.</span>
+                                <span class="font-semibold text-slate-700">Peso declarado: ${pkg.weight}</span>
+                            </div>
+                        </div>
+
+                        <!-- Tarjeta de Privacidad (Ley 1581 de 2012) y Suscripción a Alertas -->
+                        <div class="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200 shadow-2xs space-y-4">
+                            <div class="flex items-start justify-between gap-3">
+                                <div class="flex items-center gap-2.5">
+                                    <div class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-sm font-bold text-slate-900">Protección de Datos Personales (Ley 1581 de 2012)</h3>
+                                        <p class="text-xs text-slate-500">Datos sensibles enmascarados en el portal de consulta pública</p>
+                                    </div>
+                                </div>
+                                <span class="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 text-[11px] font-semibold border border-emerald-200 shrink-0">
+                                    Privacidad Activa
+                                </span>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 text-xs">
+                                <div>
+                                    <span class="text-slate-400 block text-[11px]">Destinatario (Parcial)</span>
+                                    <span class="font-semibold text-slate-800">${pkg.recipientMasked}</span>
+                                </div>
+                                <div>
+                                    <span class="text-slate-400 block text-[11px]">Contacto Vinculado</span>
+                                    <span class="font-semibold text-slate-800">${pkg.emailMasked}</span>
+                                </div>
+                                <div>
+                                    <span class="text-slate-400 block text-[11px]">Ciudad de Entrega</span>
+                                    <span class="font-semibold text-slate-800">${pkg.destinationCity}</span>
+                                </div>
+                            </div>
+
+                            <!-- Suscripción a notificaciones -->
+                            <div class="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-slate-100">
+                                <div>
+                                    <p class="text-xs font-semibold text-slate-800">Notificaciones automáticas por Correo Electrónico</p>
+                                    <p class="text-[11px] text-slate-500">Recibe alertas ante cambios de estado o novedades aduaneras.</p>
+                                </div>
+                                <button onclick="toggleClientSubscription('${pkg.code}')"
+                                    class="px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer shrink-0 ${pkg.subscribedEmail
+                                        ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-2xs'
+                                        : 'bg-slate-200 hover:bg-slate-300 text-slate-800'}">
+                                    ${pkg.subscribedEmail ? '✓ Alertas Activadas' : 'Activar Notificaciones'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Columna Derecha (5 cols): Línea de Tiempo Detallada -->
+                    <div class="lg:col-span-5 bg-white rounded-2xl p-5 sm:p-6 border border-slate-200 shadow-2xs flex flex-col">
+                        <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+                            <div>
+                                <h3 class="text-sm font-bold text-slate-900">Historial de Trazabilidad</h3>
+                                <p class="text-xs text-slate-500">Eventos cronológicos disponibles para el cliente</p>
+                            </div>
+                            <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-sky-50 text-sky-700">
+                                ${publicHistory.length} hitos
+                            </span>
+                        </div>
+
+                        <div class="mt-5 relative pl-6 space-y-6 before:content-[''] before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200">
+                            ${publicHistory.map((ev, index) => {
+                                const isLatest = index === 0;
+                                let dotColor = 'bg-slate-400 ring-white';
+                                if (ev.isIncident) {
+                                    dotColor = 'bg-amber-500 ring-amber-100';
+                                } else if (isLatest) {
+                                    dotColor = 'bg-sky-600 ring-sky-100';
+                                }
+                                return `
+                                    <div class="relative">
+                                        <span class="absolute -left-6 top-1 w-3.5 h-3.5 rounded-full ring-4 ${dotColor}"></span>
+                                        <div class="p-3.5 rounded-xl border ${ev.isIncident ? 'bg-amber-50/70 border-amber-200' : (isLatest ? 'bg-sky-50/50 border-sky-200' : 'bg-slate-50/60 border-slate-200/80')}">
+                                            <div class="flex flex-wrap items-center justify-between gap-1">
+                                                <span class="text-xs font-bold ${ev.isIncident ? 'text-amber-900' : 'text-slate-900'}">
+                                                    ${ev.stage} ${ev.isIncident ? '• Novedad Reportada' : ''}
+                                                </span>
+                                                <span class="text-[11px] font-medium text-slate-500">${ev.date}</span>
+                                            </div>
+                                            <p class="text-[11px] font-semibold text-sky-700 mt-0.5">${ev.location}</p>
+                                            <p class="text-xs text-slate-600 mt-1.5 leading-relaxed">${ev.detail}</p>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        /**
+         * MÓDULO 2: PANEL ADMINISTRATIVO — DASHBOARD Y SEGUIMIENTO
+         */
+        function updateDashboardFilter(key, value) {
+            appState[key] = value;
+            renderCurrentModule();
+        }
+
+        function openDetailModal(code) {
+            const pkg = appState.packages.find(p => p.code === code);
+            if (!pkg) return;
+
+            document.getElementById('modal-pkg-code').textContent = `${pkg.code} — ${pkg.recipientFull}`;
+            const body = document.getElementById('modal-pkg-body');
+            body.innerHTML = `
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs">
+                    <div><span class="text-slate-400 block">Destinatario Completo:</span><strong class="text-slate-800">${pkg.recipientFull}</strong></div>
+                    <div><span class="text-slate-400 block">Correo / Teléfono:</span><strong class="text-slate-800">${pkg.emailFull} • ${pkg.phoneFull}</strong></div>
+                    <div><span class="text-slate-400 block">Dirección Destino:</span><strong class="text-slate-800">${pkg.addressFull}</strong></div>
+                    <div><span class="text-slate-400 block">Origen y Peso:</span><strong class="text-slate-800">${pkg.origin} (${pkg.weight})</strong></div>
+                    <div class="sm:col-span-2"><span class="text-slate-400 block">Contenido Declarado:</span><strong class="text-slate-800">${pkg.content}</strong></div>
+                </div>
+
+                <div>
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">Historial Completo (Incluye notas internas y públicas)</h4>
+                    <div class="space-y-2.5">
+                        ${pkg.history.slice().reverse().map(h => `
+                            <div class="p-3 rounded-xl border ${h.isIncident ? 'bg-amber-50 border-amber-200' : 'bg-white border-slate-200'}">
+                                <div class="flex items-center justify-between text-xs">
+                                    <span class="font-bold text-slate-900">${h.stage}</span>
+                                    <span class="text-slate-500">${h.date}</span>
+                                </div>
+                                <p class="text-xs text-slate-700 mt-1">${h.detail}</p>
+                                <div class="mt-2 flex items-center justify-between text-[11px] text-slate-500">
+                                    <span>Responsable: <strong>${h.operator}</strong></span>
+                                    <span class="px-2 py-0.5 rounded-md ${h.visibleClient ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-600'}">
+                                        ${h.visibleClient ? 'Visible al cliente' : 'Solo uso interno'}
+                                    </span>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('modal-btn-client').onclick = () => {
+                closeDetailModal();
+                appState.selectedClientCode = pkg.code;
+                switchModule('cliente');
+            };
+            document.getElementById('modal-btn-update').onclick = () => {
+                closeDetailModal();
+                appState.selectedPackageForIncident = pkg.code;
+                switchModule('registro');
+            };
+
+            const modal = document.getElementById('detail-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeDetailModal() {
+            const modal = document.getElementById('detail-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function renderAdminDashboardModule() {
+            const total = appState.packages.length;
+            const inTransit = appState.packages.filter(p => p.status === 'En Tránsito' || p.status === 'En Reparto').length;
+            const inCustoms = appState.packages.filter(p => p.status === 'En Aduana').length;
+            const withIncident = appState.packages.filter(p => p.hasIncident && p.status !== 'Entregado').length;
+            const delivered = appState.packages.filter(p => p.status === 'Entregado').length;
+
+            const filteredPackages = appState.packages.filter(p => {
+                const q = appState.dashboardSearch.toLowerCase();
+                const matchesText = p.code.toLowerCase().includes(q) ||
+                    p.recipientFull.toLowerCase().includes(q) ||
+                    p.origin.toLowerCase().includes(q);
+                const matchesStatus = appState.dashboardStatusFilter === 'Todos' || p.status === appState.dashboardStatusFilter;
+                return matchesText && matchesStatus;
+            });
+
+            return `
+                <!-- Tarjetas KPI -->
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+                    <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-2xs">
+                        <span class="text-xs font-medium text-slate-500">Total Paquetes</span>
+                        <div class="mt-2 flex items-baseline justify-between">
+                            <span class="text-2xl sm:text-3xl font-bold text-slate-900">${total}</span>
+                            <span class="text-[11px] font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">Activos</span>
+                        </div>
+                    </div>
+                    <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-2xs">
+                        <span class="text-xs font-medium text-slate-500">En Tránsito / Reparto</span>
+                        <div class="mt-2 flex items-baseline justify-between">
+                            <span class="text-2xl sm:text-3xl font-bold text-sky-600">${inTransit}</span>
+                            <span class="text-[11px] font-semibold text-sky-700 bg-sky-50 px-2 py-0.5 rounded-full">Ruta</span>
+                        </div>
+                    </div>
+                    <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-2xs">
+                        <span class="text-xs font-medium text-slate-500">En Aduana</span>
+                        <div class="mt-2 flex items-baseline justify-between">
+                            <span class="text-2xl sm:text-3xl font-bold text-amber-600">${inCustoms}</span>
+                            <span class="text-[11px] font-semibold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full">Control</span>
+                        </div>
+                    </div>
+                    <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-2xs">
+                        <span class="text-xs font-medium text-slate-500">Con Novedad</span>
+                        <div class="mt-2 flex items-baseline justify-between">
+                            <span class="text-2xl sm:text-3xl font-bold text-rose-600">${withIncident}</span>
+                            <span class="text-[11px] font-semibold text-rose-700 bg-rose-50 px-2 py-0.5 rounded-full">Alerta</span>
+                        </div>
+                    </div>
+                    <div class="col-span-2 sm:col-span-1 bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-2xs">
+                        <span class="text-xs font-medium text-slate-500">Entregados</span>
+                        <div class="mt-2 flex items-baseline justify-between">
+                            <span class="text-2xl sm:text-3xl font-bold text-emerald-600">${delivered}</span>
+                            <span class="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">Cúcuta</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabla Interactiva de Paquetes -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden">
+                    <div class="p-5 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div>
+                            <h2 class="text-base font-bold text-slate-900">Inventario Centralizado de Paquetes Internacionales</h2>
+                            <p class="text-xs text-slate-500">Consulta, filtra y gestiona los estados de los envíos registrados en la agencia</p>
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row gap-2.5">
+                            <!-- Buscador -->
+                            <div class="relative">
+                                <input type="text" value="${appState.dashboardSearch}" oninput="updateDashboardFilter('dashboardSearch', this.value)"
+                                    placeholder="Buscar código, cliente u origen..."
+                                    class="w-full sm:w-64 pl-9 pr-3 py-2 rounded-xl border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-sky-500" />
+                                <svg class="w-4 h-4 text-slate-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                            </div>
+
+                            <!-- Filtro por estado -->
+                            <select onchange="updateDashboardFilter('dashboardStatusFilter', this.value)"
+                                class="px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500">
+                                <option value="Todos" ${appState.dashboardStatusFilter === 'Todos' ? 'selected' : ''}>Todos los estados</option>
+                                ${STAGES.map(st => `<option value="${st}" ${appState.dashboardStatusFilter === st ? 'selected' : ''}>${st}</option>`).join('')}
+                            </select>
+
+                            <!-- Botón Nuevo Paquete -->
+                            <button onclick="switchModule('registro')" class="px-4 py-2 rounded-xl bg-[#0f2537] hover:bg-[#16344d] text-white text-xs font-semibold transition-colors cursor-pointer">
+                                + Nuevo Envío
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50 border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                                    <th class="py-3.5 px-5">Código</th>
+                                    <th class="py-3.5 px-4">Destinatario</th>
+                                    <th class="py-3.5 px-4">Origen</th>
+                                    <th class="py-3.5 px-4">Estado Actual</th>
+                                    <th class="py-3.5 px-4">Última Actualización</th>
+                                    <th class="py-3.5 px-5 text-right">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100 text-xs">
+                                ${filteredPackages.length === 0 ? `
+                                    <tr>
+                                        <td colspan="6" class="py-8 text-center text-slate-500">No se encontraron paquetes que coincidan con el filtro aplicado.</td>
+                                    </tr>
+                                ` : filteredPackages.map(pkg => `
+                                    <tr class="hover:bg-slate-50/80 transition-colors">
+                                        <td class="py-3.5 px-5 font-bold text-[#0f2537] whitespace-nowrap">${pkg.code}</td>
+                                        <td class="py-3.5 px-4">
+                                            <div class="font-semibold text-slate-800">${pkg.recipientFull}</div>
+                                            <div class="text-[11px] text-slate-400">${pkg.destinationCity}</div>
+                                        </td>
+                                        <td class="py-3.5 px-4 text-slate-600 whitespace-nowrap">${pkg.origin}</td>
+                                        <td class="py-3.5 px-4 whitespace-nowrap">${getStatusBadge(pkg.status, pkg.hasIncident)}</td>
+                                        <td class="py-3.5 px-4 text-slate-500 whitespace-nowrap">${pkg.lastUpdate}</td>
+                                        <td class="py-3.5 px-5 text-right whitespace-nowrap">
+                                            <div class="inline-flex items-center gap-1.5">
+                                                <button onclick="openDetailModal('${pkg.code}')" class="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 font-medium transition-colors cursor-pointer">
+                                                    Historial
+                                                </button>
+                                                <button onclick="appState.selectedPackageForIncident='${pkg.code}'; switchModule('registro');" class="px-2.5 py-1.5 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-700 font-semibold transition-colors cursor-pointer">
+                                                    Actualizar
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+
+        /**
+         * MÓDULO 3: REGISTRO DE ENVÍOS Y GESTIÓN DE NOVEDADES E INCIDENTES
+         */
+        function refreshGeneratedCode() {
+            const input = document.getElementById('reg-code');
+            if (input) input.value = generateRandomCode();
+        }
+
+        function handleRegisterPackage(event) {
+            event.preventDefault();
+            const code = document.getElementById('reg-code').value.trim().toUpperCase();
+            const recipientFull = document.getElementById('reg-recipient').value.trim();
+            const emailFull = document.getElementById('reg-email').value.trim();
+            const phoneFull = document.getElementById('reg-phone').value.trim();
+            const addressFull = document.getElementById('reg-address').value.trim();
+            const origin = document.getElementById('reg-origin').value;
+            const weight = document.getElementById('reg-weight').value.trim() || '1.5 kg';
+            const content = document.getElementById('reg-content').value.trim() || 'Mercancía general declarada';
+            const status = document.getElementById('reg-status').value;
+
+            if (!recipientFull || !emailFull || !addressFull) {
+                showToast('Campos incompletos', 'Completa el nombre, correo y dirección del destinatario.', 'warning');
+                return;
+            }
+
+            const nowStr = getCurrentFormattedDate();
+            const newPkg = {
+                code,
+                recipientFull,
+                recipientMasked: maskName(recipientFull),
+                phoneFull: phoneFull || '+57 300 000 0000',
+                phoneMasked: maskPhone(phoneFull || '+57 300 000 0000'),
+                emailFull,
+                emailMasked: maskEmail(emailFull),
+                destinationCity: 'Cúcuta, Norte de Santander',
+                addressFull,
+                origin,
+                weight: weight.includes('kg') ? weight : `${weight} kg`,
+                content,
+                status,
+                hasIncident: false,
+                subscribedEmail: true,
+                lastUpdate: nowStr,
+                routeCoords: { originLabel: `Hub ${origin.split(',')[0]}`, progressPercent: 15 },
+                history: [
+                    {
+                        stage: status,
+                        date: nowStr,
+                        location: `Agencia Logística Cúcuta / Origen: ${origin}`,
+                        detail: `Paquete internacional registrado en el sistema TransTrax con código único ${code}.`,
+                        operator: 'Operario N. Prieto',
+                        visibleClient: true,
+                        isIncident: false
+                    }
+                ]
+            };
+
+            appState.packages.unshift(newPkg);
+            appState.selectedClientCode = code;
+            appState.selectedPackageForIncident = code;
+
+            // Generar notificación automática de registro
+            appState.notifications.unshift({
+                id: 'NOT-' + Math.floor(100 + Math.random() * 900),
+                code,
+                type: 'Paquete Registrado',
+                channel: 'Correo Electrónico',
+                recipient: newPkg.emailMasked,
+                title: `Nuevo envío registrado: ${code}`,
+                message: `Hola ${newPkg.recipientMasked}, su paquete procedente de ${origin} ha sido registrado con el código ${code}.`,
+                timestamp: nowStr,
+                status: 'Enviada'
+            });
+
+            updateNotificationCounters();
+            showToast('Paquete registrado exitosamente', `Código ${code} asignado y disponible en el Portal Cliente y Dashboard.`, 'success');
+            renderCurrentModule();
+        }
+
+        function handleRegisterIncidentOrUpdate(event) {
+            event.preventDefault();
+            const code = document.getElementById('inc-pkg-select').value;
+            const newStatus = document.getElementById('inc-status-select').value;
+            const incidentType = document.getElementById('inc-type-select').value;
+            const observation = document.getElementById('inc-observation').value.trim();
+            const isVisibleClient = document.getElementById('inc-visible-toggle').checked;
+            const sendNotification = document.getElementById('inc-notify-toggle').checked;
+
+            const pkg = appState.packages.find(p => p.code === code);
+            if (!pkg) return;
+
+            if (!observation) {
+                showToast('Observación requerida', 'Describe el estado o detalle de la novedad antes de guardar.', 'warning');
+                return;
+            }
+
+            const nowStr = getCurrentFormattedDate();
+            const hasIncident = incidentType !== 'Sin novedad (Actualización normal)';
+            const fullDetail = hasIncident ? `${incidentType}: ${observation}` : observation;
+
+            pkg.status = newStatus;
+            pkg.hasIncident = hasIncident ? true : (newStatus === 'Entregado' ? false : pkg.hasIncident);
+            pkg.lastUpdate = nowStr;
+
+            pkg.history.push({
+                stage: newStatus,
+                date: nowStr,
+                location: 'Agencia Logística Central — Cúcuta, N. de S.',
+                detail: fullDetail,
+                operator: 'Operario N. Prieto',
+                visibleClient: isVisibleClient,
+                isIncident: hasIncident
+            });
+
+            if (sendNotification) {
+                appState.notifications.unshift({
+                    id: 'NOT-' + Math.floor(100 + Math.random() * 900),
+                    code: pkg.code,
+                    type: hasIncident ? 'Novedad / Incidente' : 'Cambio de Estado',
+                    channel: 'Correo y SMS',
+                    recipient: pkg.emailMasked,
+                    title: hasIncident ? `Alerta en envío ${pkg.code}: ${incidentType}` : `Actualización de estado: ${newStatus}`,
+                    message: fullDetail,
+                    timestamp: nowStr,
+                    status: 'Enviada'
+                });
+                updateNotificationCounters();
+            }
+
+            appState.selectedClientCode = pkg.code;
+            appState.selectedPackageForIncident = pkg.code;
+
+            showToast(
+                'Trazabilidad actualizada',
+                sendNotification
+                    ? `Estado de ${pkg.code} actualizado y alerta disparada al Centro de Notificaciones.`
+                    : `Historial de ${pkg.code} actualizado correctamente.`,
+                hasIncident ? 'warning' : 'success'
+            );
+            renderCurrentModule();
+        }
+
+        function renderRegistrationAndIncidentsModule() {
+            const generatedCode = generateRandomCode();
+            const selectedPkg = appState.packages.find(p => p.code === appState.selectedPackageForIncident) || appState.packages[0];
+
+            // Recopilar últimos eventos/novedades de todos los paquetes
+            const recentEvents = [];
+            appState.packages.forEach(p => {
+                p.history.forEach(h => {
+                    recentEvents.push({ code: p.code, ...h });
+                });
+            });
+            const latestFour = recentEvents.slice(-4).reverse();
+
+            return `
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+                    <!-- COLUMNA IZQUIERDA (6 cols): Formulario de Registro de Paquetes Internacionales -->
+                    <div class="lg:col-span-6 bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden">
+                        <div class="px-6 py-4 bg-[#0f2537] text-white">
+                            <h2 class="text-base font-bold">Registrar Nuevo Envío Internacional</h2>
+                            <p class="text-xs text-slate-300">Asignación automática de código único de seguimiento</p>
+                        </div>
+
+                        <form onsubmit="handleRegisterPackage(event)" class="p-6 space-y-4 text-xs">
+                            <!-- Código generado automáticamente -->
+                            <div class="p-3.5 rounded-xl bg-sky-50 border border-sky-200 flex items-center justify-between gap-3">
+                                <div>
+                                    <label for="reg-code" class="block text-[11px] font-bold uppercase tracking-wider text-sky-800">Código Único de Seguimiento (Auto)</label>
+                                    <input id="reg-code" type="text" value="${generatedCode}" readonly
+                                        class="mt-0.5 bg-transparent text-base font-extrabold text-[#0f2537] focus:outline-none" />
+                                </div>
+                                <button type="button" onclick="refreshGeneratedCode()" class="px-3 py-1.5 rounded-lg bg-white border border-sky-200 text-sky-700 font-semibold hover:bg-sky-100 transition-colors cursor-pointer">
+                                    Regenerar
+                                </button>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div class="sm:col-span-2">
+                                    <label class="block font-semibold text-slate-700 mb-1">Nombre Completo del Destinatario *</label>
+                                    <input id="reg-recipient" type="text" required placeholder="Ej. María Fernanda Suárez"
+                                        class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-500" />
+                                </div>
+
+                                <div>
+                                    <label class="block font-semibold text-slate-700 mb-1">Correo Electrónico (Notificaciones) *</label>
+                                    <input id="reg-email" type="email" required placeholder="cliente@correo.com"
+                                        class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-500" />
+                                </div>
+
+                                <div>
+                                    <label class="block font-semibold text-slate-700 mb-1">Teléfono Móvil</label>
+                                    <input id="reg-phone" type="text" placeholder="+57 312 456 7890"
+                                        class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-500" />
+                                </div>
+
+                                <div class="sm:col-span-2">
+                                    <label class="block font-semibold text-slate-700 mb-1">Dirección de Entrega en Cúcuta / Área Metropolitana *</label>
+                                    <input id="reg-address" type="text" required placeholder="Ej. Av. 0 #11-45, Barrio Centro, Cúcuta"
+                                        class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-500" />
+                                </div>
+
+                                <div>
+                                    <label class="block font-semibold text-slate-700 mb-1">País / Ciudad de Origen</label>
+                                    <select id="reg-origin" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500">
+                                        <option value="Miami, EE. UU.">Miami, EE. UU.</option>
+                                        <option value="Madrid, España">Madrid, España</option>
+                                        <option value="Shenzhen, China">Shenzhen, China</option>
+                                        <option value="Ciudad de Panamá, Panamá">Ciudad de Panamá, Panamá</option>
+                                        <option value="Ciudad de México, México">Ciudad de México, México</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="block font-semibold text-slate-700 mb-1">Peso Declarado (kg)</label>
+                                    <input id="reg-weight" type="text" placeholder="Ej. 2.8 kg"
+                                        class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-500" />
+                                </div>
+
+                                <div>
+                                    <label class="block font-semibold text-slate-700 mb-1">Contenido Declarado</label>
+                                    <input id="reg-content" type="text" placeholder="Ej. Equipos de telecomunicaciones"
+                                        class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-500" />
+                                </div>
+
+                                <div>
+                                    <label class="block font-semibold text-slate-700 mb-1">Estado Inicial</label>
+                                    <select id="reg-status" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500">
+                                        ${STAGES.map(s => `<option value="${s}">${s}</option>`).join('')}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="pt-2">
+                                <button type="submit" class="w-full py-3 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs shadow-sm transition-colors cursor-pointer">
+                                    Guardar Paquete y Generar Código
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- COLUMNA DERECHA (6 cols): Gestión de Novedades, Incidentes y Notificaciones -->
+                    <div class="lg:col-span-6 space-y-6">
+                        <div class="bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden">
+                            <div class="px-6 py-4 bg-slate-800 text-white">
+                                <h2 class="text-base font-bold">Gestión de Novedades, Incidentes y Estados</h2>
+                                <p class="text-xs text-slate-300">Actualización manual por personal autorizado de la agencia</p>
+                            </div>
+
+                            <form onsubmit="handleRegisterIncidentOrUpdate(event)" class="p-6 space-y-4 text-xs">
+                                <div>
+                                    <label class="block font-semibold text-slate-700 mb-1">Seleccionar Paquete Registrado</label>
+                                    <select id="inc-pkg-select" onchange="appState.selectedPackageForIncident = this.value; renderCurrentModule();"
+                                        class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500">
+                                        ${appState.packages.map(p => `
+                                            <option value="${p.code}" ${p.code === selectedPkg.code ? 'selected' : ''}>
+                                                ${p.code} — ${p.recipientFull} (${p.status})
+                                            </option>
+                                        `).join('')}
+                                    </select>
+                                </div>
+
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block font-semibold text-slate-700 mb-1">Nuevo Estado Logístico</label>
+                                        <select id="inc-status-select" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500">
+                                            ${STAGES.map(st => `<option value="${st}" ${st === selectedPkg.status ? 'selected' : ''}>${st}</option>`).join('')}
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label class="block font-semibold text-slate-700 mb-1">Tipo de Novedad / Incidente</label>
+                                        <select id="inc-type-select" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500">
+                                            <option value="Sin novedad (Actualización normal)">Sin novedad (Actualización normal)</option>
+                                            <option value="Retraso en Aduana" selected>Retraso en Aduana</option>
+                                            <option value="Inspección de Rutina">Inspección de Rutina</option>
+                                            <option value="Problema en Ruta">Problema en Ruta</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block font-semibold text-slate-700 mb-1">Observación / Descripción Detallada *</label>
+                                    <textarea id="inc-observation" rows="3" required
+                                        placeholder="Describe la novedad o actualización logística..."
+                                        class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-500">Verificación documental de rutina en aduana de Cúcuta. Paquete en proceso de liberación.</textarea>
+                                </div>
+
+                                <!-- Interruptores interactivos -->
+                                <div class="space-y-3 p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+                                    <label class="flex items-center justify-between cursor-pointer">
+                                        <span class="font-medium text-slate-700">Hacer visible para el cliente en el portal público</span>
+                                        <input id="inc-visible-toggle" type="checkbox" checked class="w-4 h-4 accent-emerald-600 rounded cursor-pointer" />
+                                    </label>
+                                    <label class="flex items-center justify-between cursor-pointer pt-2 border-t border-slate-200/80">
+                                        <span class="font-medium text-slate-700">Enviar notificación automática por Correo / SMS</span>
+                                        <input id="inc-notify-toggle" type="checkbox" checked class="w-4 h-4 accent-sky-600 rounded cursor-pointer" />
+                                    </label>
+                                </div>
+
+                                <button type="submit" class="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm transition-colors cursor-pointer">
+                                    Registrar Incidente y Notificar
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Historial Reciente de Movimientos -->
+                        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-2xs">
+                            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">Últimos Movimientos Registrados</h3>
+                            <div class="space-y-2.5 text-xs">
+                                ${latestFour.map(item => `
+                                    <div class="p-3 rounded-xl border ${item.isIncident ? 'bg-amber-50/70 border-amber-200' : 'bg-slate-50 border-slate-200/70'} flex items-start justify-between gap-3">
+                                        <div>
+                                            <span class="font-bold text-[#0f2537]">${item.code}</span>
+                                            <span class="text-slate-400 mx-1">&bull;</span>
+                                            <span class="font-semibold ${item.isIncident ? 'text-amber-800' : 'text-slate-700'}">${item.stage}</span>
+                                            <p class="text-slate-600 mt-0.5 line-clamp-2">${item.detail}</p>
+                                        </div>
+                                        <span class="text-[10px] text-slate-400 shrink-0">${item.date.split(',')[0]}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        /**
+         * MÓDULO 4: CENTRO DE NOTIFICACIONES, ROLES (RBAC) Y REPORTES
+         */
+        function toggleUserStatus(userId) {
+            const user = appState.users.find(u => u.id === userId);
+            if (!user) return;
+            user.active = !user.active;
+            showToast(
+                'Permisos RBAC actualizados',
+                `El usuario ${user.name} ahora está ${user.active ? 'Activo' : 'Inactivo'}.`,
+                'info'
+            );
+            renderCurrentModule();
+        }
+
+        function simulateCsvExport() {
+            showToast('Reporte generado', 'Se ha generado el resumen estadístico de paquetes gestionados en Cúcuta (CSV).', 'success');
+        }
+
+        function renderNotificationsRbacReportsModule() {
+            const total = appState.packages.length;
+            const stageCounts = STAGES.map(st => ({
+                stage: st,
+                count: appState.packages.filter(p => p.status === st).length
+            }));
+            const maxCount = Math.max(...stageCounts.map(s => s.count), 1);
+
+            const filteredNotifs = appState.notifFilter === 'Todas'
+                ? appState.notifications
+                : appState.notifications.filter(n => n.type === appState.notifFilter);
+
+            return `
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+                    <!-- CENTRO DE NOTIFICACIONES AUTOMÁTICAS (6 cols) -->
+                    <div class="lg:col-span-6 bg-white rounded-2xl border border-slate-200 shadow-2xs flex flex-col overflow-hidden">
+                        <div class="p-5 border-b border-slate-100 flex flex-wrap items-center justify-between gap-2">
+                            <div>
+                                <h2 class="text-base font-bold text-slate-900">Centro de Notificaciones Automáticas</h2>
+                                <p class="text-xs text-slate-500">Alertas enviadas a clientes ante cambios de estado o novedades</p>
+                            </div>
+                            <select onchange="appState.notifFilter = this.value; renderCurrentModule();"
+                                class="px-3 py-1.5 rounded-xl border border-slate-300 text-xs font-medium bg-white">
+                                <option value="Todas" ${appState.notifFilter === 'Todas' ? 'selected' : ''}>Todas (${appState.notifications.length})</option>
+                                <option value="Cambio de Estado" ${appState.notifFilter === 'Cambio de Estado' ? 'selected' : ''}>Cambio de Estado</option>
+                                <option value="Novedad / Incidente" ${appState.notifFilter === 'Novedad / Incidente' ? 'selected' : ''}>Novedad / Incidente</option>
+                                <option value="Paquete Registrado" ${appState.notifFilter === 'Paquete Registrado' ? 'selected' : ''}>Paquete Registrado</option>
+                            </select>
+                        </div>
+
+                        <div class="p-5 space-y-3 overflow-y-auto max-h-[420px]">
+                            ${filteredNotifs.map(n => {
+                                const isIncident = n.type.includes('Novedad');
+                                return `
+                                    <div class="p-4 rounded-xl border ${isIncident ? 'bg-amber-50/70 border-amber-200' : 'bg-slate-50/80 border-slate-200'} space-y-1.5">
+                                        <div class="flex items-center justify-between gap-2">
+                                            <span class="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase ${isIncident ? 'bg-amber-200/70 text-amber-900' : 'bg-sky-100 text-sky-800'}">
+                                                ${n.type} • ${n.channel}
+                                            </span>
+                                            <span class="text-[11px] text-slate-400">${n.timestamp}</span>
+                                        </div>
+                                        <p class="text-xs font-bold text-slate-900">${n.title}</p>
+                                        <p class="text-xs text-slate-600 leading-relaxed">${n.message}</p>
+                                        <div class="pt-1 flex items-center justify-between text-[11px] text-slate-500">
+                                            <span>Código: <strong>${n.code}</strong> &rarr; ${n.recipient}</span>
+                                            <span class="text-emerald-600 font-semibold">✓ ${n.status}</span>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+
+                    <!-- CONTROL DE ACCESO BASADO EN ROLES - RBAC (6 cols) -->
+                    <div class="lg:col-span-6 bg-white rounded-2xl border border-slate-200 shadow-2xs flex flex-col overflow-hidden">
+                        <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+                            <div>
+                                <h2 class="text-base font-bold text-slate-900">Usuarios y Control de Roles (RBAC)</h2>
+                                <p class="text-xs text-slate-500">Seguridad de acceso y protección de datos (Ley 1581 de 2012)</p>
+                            </div>
+                            <span class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                                Hash + RBAC
+                            </span>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse text-xs">
+                                <thead>
+                                    <tr class="bg-slate-50 border-b border-slate-200 text-[11px] font-bold uppercase text-slate-500">
+                                        <th class="py-3 px-4">Usuario Autorizado</th>
+                                        <th class="py-3 px-4">Rol</th>
+                                        <th class="py-3 px-4">Estado</th>
+                                        <th class="py-3 px-4 text-right">Acceso</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                                    ${appState.users.map(u => `
+                                        <tr class="hover:bg-slate-50/70">
+                                            <td class="py-3.5 px-4">
+                                                <div class="font-bold text-slate-800">${u.name}</div>
+                                                <div class="text-[11px] text-slate-400">${u.email}</div>
+                                                <div class="text-[10px] text-slate-500 mt-0.5">${u.permissions}</div>
+                                            </td>
+                                            <td class="py-3.5 px-4 whitespace-nowrap">
+                                                <span class="px-2.5 py-1 rounded-lg text-[11px] font-semibold ${u.role === 'Administrador' ? 'bg-[#0f2537] text-white' : 'bg-sky-50 text-sky-800 border border-sky-200'}">
+                                                    ${u.role}
+                                                </span>
+                                            </td>
+                                            <td class="py-3.5 px-4 whitespace-nowrap">
+                                                <span class="inline-flex items-center gap-1 text-xs font-semibold ${u.active ? 'text-emerald-600' : 'text-slate-400'}">
+                                                    <span class="w-2 h-2 rounded-full ${u.active ? 'bg-emerald-500' : 'bg-slate-300'}"></span>
+                                                    ${u.active ? 'Activo' : 'Inactivo'}
+                                                </span>
+                                            </td>
+                                            <td class="py-3.5 px-4 text-right whitespace-nowrap">
+                                                <button onclick="toggleUserStatus('${u.id}')" class="px-2.5 py-1 rounded-lg border border-slate-200 hover:bg-slate-100 text-[11px] font-semibold text-slate-700 cursor-pointer">
+                                                    ${u.active ? 'Suspender' : 'Activar'}
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- REPORTES Y ESTADÍSTICAS DE PAQUETES EN CÚCUTA -->
+                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-2xs">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-5 border-b border-slate-100">
+                        <div>
+                            <h2 class="text-base font-bold text-slate-900">Reportes y Estadísticas Operativas — Agencia Cúcuta</h2>
+                            <p class="text-xs text-slate-500">Distribución en tiempo real de los ${total} paquetes internacionales registrados</p>
+                        </div>
+                        <button onclick="simulateCsvExport()" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-colors cursor-pointer self-start sm:self-auto">
+                            <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                            </svg>
+                            Exportar Resumen CSV
+                        </button>
+                    </div>
+
+                    <div class="mt-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+                        <!-- Gráfico de Barras por Etapa -->
+                        <div class="lg:col-span-8 space-y-3.5">
+                            ${stageCounts.map(sc => {
+                                const pct = Math.round((sc.count / maxCount) * 100);
+                                const share = total > 0 ? Math.round((sc.count / total) * 100) : 0;
+                                return `
+                                    <div>
+                                        <div class="flex justify-between text-xs mb-1">
+                                            <span class="font-semibold text-slate-700">${sc.stage}</span>
+                                            <span class="font-bold text-slate-900">${sc.count} paquete(s) <span class="text-slate-400 font-normal">(${share}%)</span></span>
+                                        </div>
+                                        <div class="w-full h-3 rounded-full bg-slate-100 overflow-hidden">
+                                            <div class="h-full rounded-full bg-sky-600 transition-all duration-500" style="width: ${pct}%"></div>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+
+                        <!-- Resumen Ejecutivo Lateral -->
+                        <div class="lg:col-span-4 p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-3 text-xs">
+                            <h3 class="font-bold text-slate-900 text-sm">Indicadores Clave del Prototipo</h3>
+                            <div class="flex justify-between py-2 border-b border-slate-200">
+                                <span class="text-slate-600">Trazabilidad centralizada:</span>
+                                <span class="font-bold text-emerald-700">100% Digital</span>
+                            </div>
+                            <div class="flex justify-between py-2 border-b border-slate-200">
+                                <span class="text-slate-600">Notificaciones disparadas:</span>
+                                <span class="font-bold text-sky-700">${appState.notifications.length} alertas</span>
+                            </div>
+                            <div class="flex justify-between py-2 border-b border-slate-200">
+                                <span class="text-slate-600">Principales orígenes:</span>
+                                <span class="font-bold text-slate-800">EE. UU., España, China</span>
+                            </div>
+                            <p class="text-[11px] text-slate-500 leading-relaxed pt-1">
+                                Datos generados dinámicamente a partir de los registros ingresados en los módulos del prototipo funcional.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        /**
+         * GESTIÓN DEL MODAL QR Y COPIADO DE ENLACE PARA EL PÓSTER
+         */
+        function openQrModal() {
+            const modal = document.getElementById('qr-modal');
+            const input = document.getElementById('poster-url-input');
+            // Detectar URL actual o sugerir enlace oficial limpio si se abre localmente
+            const currentHref = window.location.href.startsWith('http')
+                ? window.location.href
+                : 'https://transtrax-udes-cucuta.vercel.app';
+            input.value = currentHref;
+            updateQrCode(currentHref);
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeQrModal() {
+            const modal = document.getElementById('qr-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function updateQrCode(urlText) {
+            const canvas = document.getElementById('qr-canvas');
+            if (!canvas) return;
+            if (typeof QRious !== 'undefined') {
+                new QRious({
+                    element: canvas,
+                    value: urlText || 'https://transtrax-udes-cucuta.vercel.app',
+                    size: 180,
+                    level: 'H',
+                    foreground: '#0f2537',
+                    background: '#ffffff'
+                });
+            }
+        }
+
+        function copyPosterUrl() {
+            const input = document.getElementById('poster-url-input');
+            if (!input) return;
+            input.select();
+            input.setSelectionRange(0, 99999);
+            try {
+                document.execCommand('copy');
+                showToast('Enlace copiado', 'La URL del prototipo se ha copiado al portapapeles para tu póster.', 'success');
+            } catch (err) {
+                showToast('Copia manual', 'Selecciona y copia el enlace desde el cuadro de texto.', 'info');
+            }
+        }
+
+        // Inicializar aplicación al cargar la ventana
+        window.onload = function () {
+            switchModule('cliente');
+        };
+    </script>
+</body>
+</html>
